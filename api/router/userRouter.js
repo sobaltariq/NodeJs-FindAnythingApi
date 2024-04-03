@@ -1,13 +1,16 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const { registerUser } = require("../controller/user/userController");
+const {
+  registerUser,
+  verifyMail,
+} = require("../controller/user/userController");
 
 const router = express.Router();
 
 router.post("/register", registerUser);
 
-// router.get("/verify", verifyMail);
+router.get("/verify", verifyMail);
 
 // router.post("/login", loginUser);
 

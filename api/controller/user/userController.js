@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const userModel = require("../../model/userModel");
 const { verifyLoginMail } = require("../additional/emailVerifier");
 
+const mongoose = require("mongoose");
+
 // Sign Up/Register User
 const registerUser = async (req, res, next) => {
   try {
@@ -91,6 +93,62 @@ const registerUser = async (req, res, next) => {
   }
 };
 
+const verifyMail = (req, res, next) => {
+  const userId = req.query.id;
+
+  // to check user id type is mongoose
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user ID format" });
+  }
+
+  userModel
+    .findOne({ _id: userId })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+      if (user.is_verified) {
+        console.log(user);
+        return res.status(200).json({
+          message: "User is Already Verified",
+        });
+      }
+
+      return userModel
+        .findOneAndUpdate(
+          { _id: userId },
+          { $set: { is_verified: 1 } },
+          { new: true }
+        )
+        .then((updatedUser) => {
+          if (!updatedUser) {
+            return res.status(500).json({
+              message: "Failed to update user verification status",
+            });
+          }
+          console.log(updatedUser);
+          return res.status(200).json({
+            message: "User Verified Successfully",
+          });
+        })
+        .catch((err) => {
+          console.log("Error to verify user", err);
+          return res.status(500).json({
+            error: "Error to verify user",
+          });
+        });
+    })
+    .catch((err) => {
+      console.log("Error to find user to verify");
+      return res.status(500).json({
+        error: "Error to find user to verify",
+      });
+    });
+};
+
 module.exports = {
   registerUser,
+  verifyMail,
 };
